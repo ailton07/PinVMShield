@@ -3,9 +3,10 @@ PinVMShield
 
 Original project: https://bitbucket.org/rjrodriguez/pinvmshield
 Originals authors: 
-Rodriguez, Ricardo J.
-Rodriguez Gaston, Inaki
-Alonso, Javier
+
+- Rodriguez, Ricardo J.
+- Rodriguez Gaston, Inaki
+- Alonso, Javier
 
 This project intends to be an update to the original PinVMShield project.
 
