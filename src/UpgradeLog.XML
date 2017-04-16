@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="PinVMShield">
+</Property><Property Name="Solution File" Value="C:\Users\ailto\Desktop\Workbench\rjrodriguez-pinvmshield\src\PinVMShield.sln">
+</Property><Property Name="Date" Value="domingo, 16 de abril de 2017">
+</Property><Property Name="Time" Value="11:50">
+</Property></Properties><Event ErrorLevel="0" Project="PinVMShield" Source="PinVMShield\PinVMShield.vcproj" Description="Converting project file 'C:\Users\ailto\Desktop\Workbench\rjrodriguez-pinvmshield\src\PinVMShield\PinVMShield.vcproj'.">
+</Event><Event ErrorLevel="1" Project="PinVMShield" Source="PinVMShield\PinVMShield.vcproj" Description="VCWebServiceProxyGeneratorTool is no longer supported. The tool has been removed from your project settings.">
+</Event><Event ErrorLevel="0" Project="PinVMShield" Source="PinVMShield\PinVMShield.vcproj" Description="Done converting to new project file 'C:\Users\ailto\Desktop\Workbench\rjrodriguez-pinvmshield\src\PinVMShield\PinVMShield.vcxproj'.">
+</Event><Event ErrorLevel="3" Project="PinVMShield" Source="PinVMShield\PinVMShield.vcproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="PinVMShield.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="PinVMShield.sln" Description="Converted">
+</Event></UpgradeLog>

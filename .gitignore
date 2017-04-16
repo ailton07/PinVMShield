@@ -1,0 +1,8 @@
+src/PinVMShield/Debug/*.*
+src/PinVMShield/Debug/
+src/Debug/*.*
+src/Debug/
+*.pdb
+*.idb
+*.obj
+*.ncb
