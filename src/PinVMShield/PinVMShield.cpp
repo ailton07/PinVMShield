@@ -102,6 +102,8 @@ int main(int argc, char *argv[])
     // Register Image to be called to instrument functions.
     IMG_AddInstrumentFunction(Image, 0);
 
+	printMessage("\t-> PIN_StartProgram();\n");
+
     PIN_StartProgram(); // Never returns
     
     return 0;

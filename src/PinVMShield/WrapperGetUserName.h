@@ -48,12 +48,23 @@ class WrapperGetUserName: public PinWrapperWinAPI
 									PIN_PARG_END()
 									);
 
-			bool detectionVMs = checkDetection(ctx, "GetUserName", (char *)lpBuffer, isUnicode);
+			// bool detectionVMs = checkDetection(ctx, "GetUserName", (char *)lpBuffer, isUnicode);
+			// Forcing detection
+			bool detectionVMs = true;
 
 			if(detectionVMs)
 			{
 				printMessage("\t-> [GUN] Asked for a dubious username, spoofing return value\n");
+				char textToPrint[4096];
+				// WINDOWS::TCHAR* textToPrint2;
+				wchar_t* textToPrint2;
+
+				sprintf(textToPrint, "[Orginal] %s", lpBuffer);
+				printMessage(TEXT(textToPrint));
+
 				strcpy((char *)lpBuffer, "LadyBoysLover"); // XXX: Improve this, put some randomness...
+				sprintf(textToPrint, "[Modificada] %s", lpBuffer);
+				printMessage(textToPrint);
 			}
 
 			return retVal;

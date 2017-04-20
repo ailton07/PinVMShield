@@ -50,11 +50,13 @@ static char *stristr (char *s1, char *s2)
 
 static void printMessage(char *msg)
 {
-	if(logFile == NULL)
+	/*if(logFile == NULL)
 		logFile = fopen(logFilename, "w");
 
 	char s[4096];
 	sprintf(s, "[PinVMShield] %s", msg);
-	fprintf(logFile, s);
+	fprintf(logFile, s);*/
+
+	LOG(msg);
 }
 
