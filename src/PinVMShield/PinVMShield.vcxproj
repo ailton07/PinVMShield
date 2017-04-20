@@ -108,6 +108,7 @@
     <ClInclude Include="VirtualboxDetectionWrapper.h" />
     <ClInclude Include="VirtualPCDetectionWrapper.h" />
     <ClInclude Include="VMWareDetectionWrapper.h" />
+    <ClInclude Include="WrapperTLSGetValue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

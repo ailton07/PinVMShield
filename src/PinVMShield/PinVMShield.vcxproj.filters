@@ -101,5 +101,8 @@
     <ClInclude Include="VMWareDetectionWrapper.h">
       <Filter>Archivos de encabezado\DetectionWrappers</Filter>
     </ClInclude>
+    <ClInclude Include="WrapperTLSGetValue.h">
+      <Filter>Archivos de encabezado\APIWrappers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -43,6 +43,7 @@
 #include "WrapperCreateNamedPipe.h"
 #include "WrapperGetCursorPos.h"
 #include "WrapperCallNamedPipe.h"
+#include "WrapperTLSGetValue.h"
 
 /**
  Called by Pin, fakes the APIs. Check above code
@@ -54,6 +55,8 @@ VOID Image(IMG img, VOID *v)
 	vector<PinWrapperWinAPI*>  vWinAPIs;
 
 	// Fill vector properly...
+	vWinAPIs.push_back(new WrapperTLSGetValue()); // API GetUserNameA/W
+
 	vWinAPIs.push_back(new WrapperGetUserName()); // API GetUserNameA/W
 	vWinAPIs.push_back(new WrapperGetUserNameEx()); // API GetUserNameExA/W
 	vWinAPIs.push_back(new WrapperRegQueryValue()); // API RegQueryValueA/W
