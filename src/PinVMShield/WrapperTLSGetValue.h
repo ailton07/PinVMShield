@@ -26,15 +26,13 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 {
 	private:
 		/**
-		 Wrapper of TlsGetValueA/TlsGetValueW Windows APIs. Spoofs the return if needed
+		 Wrapper of TlsGetValue Windows APIs. Spoofs the return if needed
 				before returning to the caller
-		 @param origFunc a pointer to the address of the original function (GetModuleHandleA/GetModuleHandleW)
-		 @param lpBuffer a pointer to the buffer to receive the user's logon name
-		 @param lpnSize on input, this variable specifies the size of the lpBuffer buffer, in TCHARs. 
-						On output, the variable receives the number of TCHARs copied to the buffer, including the terminating null character
+		 @param orig a pointer to the address of the original function (GetModuleHandleA/GetModuleHandleW)
+		 @param dwTlsIndex The TLS index that was allocated by the TlsAlloc function.
 		 @param ctx a pointer to a CONTEXT Pin structure that stores the architectural state of the processor
 		 @return a bool indicating whether the execution was successful
-				For more information, check http://msdn.microsoft.com/en-us/library/windows/desktop/ms724432(v=vs.85).aspx
+				For more information, check https://msdn.microsoft.com/pt-br/library/windows/desktop/ms686812(v=vs.85).aspx
 		 */
 		static WINDOWS::LPVOID myTlsGetValue(AFUNPTR orig, 
 										   WINDOWS::DWORD dwTlsIndex,
@@ -42,7 +40,9 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 										   bool isUnicode)
 		{
 			WINDOWS::LPVOID retVal = 0;
-			printMessage("\t-> [TLS_GV] Executando\n");
+			// TlsGetValue e muito executado, logo os prints desnecassarios para o rastreio do 
+			// funcionamento serao omitidos
+			// printMessage("\t-> [TLS_GV] Executando\n");
 			PIN_CallApplicationFunction(ctx, PIN_ThreadId(),
 									CALLINGSTD_STDCALL, orig, NULL,
 									PIN_PARG(WINDOWS::LPVOID), &retVal,
@@ -51,32 +51,30 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 									);
 
 			// bool detectionVMs = checkDetection(ctx, "GetUserName", (char *)lpBuffer, isUnicode);
-			// Forcing detection
-			bool detectionVMs = (retVal !=0 ? true: false);
+			bool detectionVMs;
+			
+			// Checa se houve um valor de retorno
+			// detectionVMs = true;
+			detectionVMs = (retVal !=0 ? true: false);
 
 			if(detectionVMs)
 			{
-				count ++;
-				printMessage("\t-> [TLS_GV] Asked for TLS values, spoofing return value\n");
-				char textToPrint[4096];
-				sprintf(textToPrint, "[Orginal] %d\n", reinterpret_cast<int>(retVal));
-				printMessage(TEXT(textToPrint));
-
-				if (count < 15) {
-					retVal = (WINDOWS::LPVOID) 0;
+				char textToPrint[4096];	
+				// Pin utiliza por padrao os 5 primeiros slots TLS
+				// Os valores previamente existentes sao deslocados em 5
+				// O que estava no slot 1, vai para o slot 6
+				// Logo, so precisamos spoofar os 5 primeiros slots
+				 if (dwTlsIndex < 6) 
+				 {
+					 printMessage("\t-> [TLS_GV] Asked for TLS values, spoofing return value\n");
+					 sprintf(textToPrint, "[Orginal] %d\n", reinterpret_cast<int>(retVal));
+					 printMessage(TEXT(textToPrint));
+					
+					 retVal = (WINDOWS::LPVOID) 0;
+					
+					sprintf(textToPrint, "[Modificada] %d\n\n", reinterpret_cast<int>(retVal));
+					printMessage(TEXT(textToPrint));
 				}
-				
-				sprintf(textToPrint, "[Modificada] %d\n\n", reinterpret_cast<int>(retVal));
-				printMessage(TEXT(textToPrint));
-				// WINDOWS::TCHAR* textToPrint2;
-				//wchar_t* textToPrint2;
-
-				//sprintf(textToPrint, "[Orginal] %s", lpBuffer);
-				//printMessage(TEXT(textToPrint));
-
-				//strcpy((char *)lpBuffer, "LadyBoysLover"); // XXX: Improve this, put some randomness...
-				//sprintf(textToPrint, "[Modificada] %s", lpBuffer);
-				//printMessage(textToPrint);
 			}
 
 			return retVal;
@@ -95,6 +93,7 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 		void ReplaceFunctionSignature(RTN rtn, PROTO proto, bool isUnicode)
 		{
 			printMessage("\t-> [TLS_GV] ReplaceFunctionSignature\n");
+
 			RTN_ReplaceSignature(rtn, (AFUNPTR) WrapperTLSGetValue::myTlsGetValue,
 					IARG_PROTOTYPE, proto,
 					IARG_ORIG_FUNCPTR,
@@ -121,6 +120,5 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 		{
 			strcpy(this -> funcName, "TlsGetValue");
 		}
-
 		~WrapperTLSGetValue(){};
 };

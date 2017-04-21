@@ -45,6 +45,13 @@
 #include "WrapperCallNamedPipe.h"
 #include "WrapperTLSGetValue.h"
 
+#include <stdio.h>
+#include <string.h>
+
+ADDRINT _baseM = 0;
+ADDRINT _endM = 0;
+
+
 /**
  Called by Pin, fakes the APIs. Check above code
  @param img an IMG represents all the data structures corresponding to a binary (executable or library)
@@ -52,36 +59,62 @@
  */
 VOID Image(IMG img, VOID *v)
 {
-	vector<PinWrapperWinAPI*>  vWinAPIs;
+		// PrintImageInformations (img);
 
-	// Fill vector properly...
-	vWinAPIs.push_back(new WrapperTLSGetValue()); // API GetUserNameA/W
+		vector<PinWrapperWinAPI*>  vWinAPIs;
 
-	vWinAPIs.push_back(new WrapperGetUserName()); // API GetUserNameA/W
-	vWinAPIs.push_back(new WrapperGetUserNameEx()); // API GetUserNameExA/W
-	vWinAPIs.push_back(new WrapperRegQueryValue()); // API RegQueryValueA/W
-	vWinAPIs.push_back(new WrapperRegQueryValueEx()); // API RegQueryValueExA/W
-	vWinAPIs.push_back(new WrapperRegOpenKey()); // API RegOpenKeyA/W
-	vWinAPIs.push_back(new WrapperRegOpenKeyEx()); // API RegOpenKeyExA/W
-	vWinAPIs.push_back(new WrapperGetModuleHandle()); // API GetModuleHandleA/W
-	vWinAPIs.push_back(new WrapperGetModuleHandleEx()); // API GetModuleHandleExA/W
-	vWinAPIs.push_back(new WrapperGetFileAttributes()); // API GetFileAttributesA/W
-	//XXX This is not working, needs to be revised...
-	//vWinAPIs.push_back(new WrapperProcess32FirstAndNext()); // API Process32First / Process32Next
-	vWinAPIs.push_back(new WrapperFindWindow()); // API FindWindowA/W
-	vWinAPIs.push_back(new WrapperFindWindowEx()); // API FindWindowExA/W
-	vWinAPIs.push_back(new WrapperCreateFile()); // API CreateFileA/W
-	vWinAPIs.push_back(new WrapperCreateNamedPipe()); // API CreateNamedPipeA/W
-	vWinAPIs.push_back(new WrapperGetCursorPos()); // API GetCursorPos
-	vWinAPIs.push_back(new WrapperCallNamedPipe()); // API CallNamedPipe
+		// Fill vector properly...
+		vWinAPIs.push_back(new WrapperTLSGetValue()); // API TLSGetValue
 
-	// And iterates over the components...
-	for(vector<PinWrapperWinAPI*>::iterator it = vWinAPIs.begin(); it != vWinAPIs.end(); it++)
-	{
-		(*it) -> ReplaceWinAPI(img);
-	}
+		vWinAPIs.push_back(new WrapperGetUserName()); // API GetUserNameA/W
+		vWinAPIs.push_back(new WrapperGetUserNameEx()); // API GetUserNameExA/W
+		vWinAPIs.push_back(new WrapperRegQueryValue()); // API RegQueryValueA/W
+		vWinAPIs.push_back(new WrapperRegQueryValueEx()); // API RegQueryValueExA/W
+		vWinAPIs.push_back(new WrapperRegOpenKey()); // API RegOpenKeyA/W
+		vWinAPIs.push_back(new WrapperRegOpenKeyEx()); // API RegOpenKeyExA/W
+		vWinAPIs.push_back(new WrapperGetModuleHandle()); // API GetModuleHandleA/W
+		vWinAPIs.push_back(new WrapperGetModuleHandleEx()); // API GetModuleHandleExA/W
+		vWinAPIs.push_back(new WrapperGetFileAttributes()); // API GetFileAttributesA/W
+		//XXX This is not working, needs to be revised...
+		//vWinAPIs.push_back(new WrapperProcess32FirstAndNext()); // API Process32First / Process32Next
+		vWinAPIs.push_back(new WrapperFindWindow()); // API FindWindowA/W
+		vWinAPIs.push_back(new WrapperFindWindowEx()); // API FindWindowExA/W
+		vWinAPIs.push_back(new WrapperCreateFile()); // API CreateFileA/W
+		vWinAPIs.push_back(new WrapperCreateNamedPipe()); // API CreateNamedPipeA/W
+		vWinAPIs.push_back(new WrapperGetCursorPos()); // API GetCursorPos
+		vWinAPIs.push_back(new WrapperCallNamedPipe()); // API CallNamedPipe
+
+		// And iterates over the components...
+		for(vector<PinWrapperWinAPI*>::iterator it = vWinAPIs.begin(); it != vWinAPIs.end(); it++)
+		{
+			(*it) -> ReplaceWinAPI(img);
+		}
 }
 
+/**
+ Print informations about image on load
+ Load base and end address of .exe image
+ @param img an IMG represents all the data structures corresponding to a binary (executable or library)
+ */
+VOID PrintImageInformations (IMG img) 
+{
+	// https://www.linkedin.com/pulse/visualizing-program-execution-binary-ninja-dynamic-britton-manahan
+	char str[4096];
+	char textToPrint[4096];
+	strcpy (str, IMG_Name(img).c_str());
+	printMessage(str);
+	// Checa se trata-se do executavel
+	if ( strstr(str, ".exe") != NULL )
+	{
+		printMessage(str);
+		
+		_baseM = IMG_LowAddress(img);
+		_endM = IMG_HighAddress(img);
+
+		LOG(StringFromAddrint(_baseM));
+		LOG(StringFromAddrint(_endM));
+	}
+}
 
 /**
  Last function of pintool that will be executed
