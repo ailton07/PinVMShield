@@ -45,12 +45,17 @@
 #include "WrapperCallNamedPipe.h"
 #include "WrapperTLSGetValue.h"
 
-#include <stdio.h>
 #include <string.h>
+
+#define codeCacheBlockSize 0x40000
 
 ADDRINT _baseM = 0;
 ADDRINT _endM = 0;
 
+std::vector<ADDRINT> addrintVector;
+std::string mainName;
+
+VOID PrintImageInformations (IMG img);
 
 /**
  Called by Pin, fakes the APIs. Check above code
@@ -126,6 +131,41 @@ VOID Fini(INT32 code, VOID *v)
 		fclose(logFile);
 }
 
+// https://github.com/jingpu/pintools/blob/master/source/tools/CacheClient/insertDelete.cpp
+VOID WatchTraces(TRACE trace, VOID *v)
+{
+    char textToPrint[4096];
+	ADDRINT orig_pc = TRACE_Address(trace);
+	ADDRINT codeCacheAddress = TRACE_CodeCacheAddress(trace);
+
+	for(int i = 0 ; i < addrintVector.size(); i++)
+    {
+		if ((addrintVector[i] == codeCacheAddress) ||
+			(codeCacheAddress > addrintVector[i]) && 
+			(codeCacheAddress < addrintVector[i] + codeCacheBlockSize))
+			return;
+	 }
+
+	{
+
+		sprintf(textToPrint, "\n[TRACE_Address] 0x%x ", orig_pc);
+		printMessage(TEXT(textToPrint));
+
+		sprintf(textToPrint, "\t[TRACE_CodeCacheAddress] 0x%x ", codeCacheAddress);
+		printMessage(TEXT(textToPrint));
+
+		sprintf(textToPrint, "\t[TRACE_Size] 0x%x ", TRACE_Size(trace));
+		printMessage(TEXT(textToPrint));
+
+		sprintf(textToPrint, "\t[TRACE_CodeCacheSize] 0x%x \n", TRACE_CodeCacheSize(trace));
+		printMessage(TEXT(textToPrint));
+
+		addrintVector.push_back(codeCacheAddress);
+	}
+}
+
+
+
 /**
  Main procedure of pintool. Not very interested to comment if you are related to Pintools development
  */
@@ -135,7 +175,9 @@ int main(int argc, char *argv[])
     PIN_InitSymbols();
     PIN_Init(argc,argv);
 
-    // Register Image to be called to instrument functions.
+    CODECACHE_AddTraceInsertedFunction(WatchTraces, 0);
+
+	// Register Image to be called to instrument functions.
     IMG_AddInstrumentFunction(Image, 0);
 
 	printMessage("\t-> PIN_StartProgram();\n");
