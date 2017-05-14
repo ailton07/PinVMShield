@@ -45,6 +45,8 @@
 #include "WrapperCallNamedPipe.h"
 #include "WrapperTLSGetValue.h"
 
+#include "WrapperCodeCache.h"
+
 #include <string.h>
 
 #define codeCacheBlockSize 0x40000
@@ -53,7 +55,6 @@ ADDRINT _baseM = 0;
 ADDRINT _endM = 0;
 
 std::vector<ADDRINT> addrintVector;
-std::string mainName;
 
 VOID PrintImageInformations (IMG img);
 
@@ -64,8 +65,6 @@ VOID PrintImageInformations (IMG img);
  */
 VOID Image(IMG img, VOID *v)
 {
-		// PrintImageInformations (img);
-
 		vector<PinWrapperWinAPI*>  vWinAPIs;
 
 		// Fill vector properly...
@@ -132,6 +131,10 @@ VOID Fini(INT32 code, VOID *v)
 }
 
 // https://github.com/jingpu/pintools/blob/master/source/tools/CacheClient/insertDelete.cpp
+/**
+ Preenche uma lista com as informacoes sobre os CodeCaches
+ This method obtain information about codecache address.
+ */
 VOID WatchTraces(TRACE trace, VOID *v)
 {
     char textToPrint[4096];
@@ -164,7 +167,84 @@ VOID WatchTraces(TRACE trace, VOID *v)
 	}
 }
 
+// Versao nao estruturada
+// Is called for every instruction and instruments reads and writes
+ADDRINT GetMemAddress( VOID * ip, ADDRINT ea)
+	{
+		long _addr = (long) (ea);
 
+		for(int i = 0 ; i < addrintVector.size(); i++)
+		{
+			if ((addrintVector[i] == _addr) ||
+				(_addr > addrintVector[i]) && 
+				(_addr < addrintVector[i] + codeCacheBlockSize))
+			{
+				_addr = (ea) + 0x40000;
+				return static_cast<ADDRINT>(_addr);
+			}
+		}
+		return ea;
+	}
+
+	static REG GetScratchReg(UINT32 index)
+	{
+		static std::vector<REG> regs;
+
+		while (index >= regs.size())
+		{
+			REG reg = PIN_ClaimToolRegister();
+			if (reg == REG_INVALID())
+			{
+				PIN_ExitProcess(1);
+				/* does not return */
+			}
+			regs.push_back(reg);
+		}
+
+		return regs[index];
+	}
+
+VOID Instruction(INS ins, VOID *v)
+{
+	// Instruments memory accesses using a predicated call, i.e.
+	// the instrumentation is called iff the instruction will actually be executed.
+	//
+	// On the IA-32 and Intel(R) 64 architectures conditional moves and REP 
+	// prefixed instructions appear as predicated instructions in Pin.
+	UINT32 memOperands = INS_MemoryOperandCount(ins);
+
+	// Iterate over each memory operand of the instruction.
+	for (UINT32 memOp = 0; memOp < memOperands; memOp++)
+	{
+		if (INS_MemoryOperandIsRead(ins, memOp))
+		{
+			/*INS_InsertPredicatedCall(
+			ins, IPOINT_BEFORE, (AFUNPTR)RecordMemRead,
+			IARG_INST_PTR,
+			IARG_MEMORYOP_EA, memOp,
+			IARG_END);*/
+			// https://svn.mcs.anl.gov/repos/performance/Gwalp/gwalpsite/pin/source/tools/SignalTests/null-rewrite-tool.cpp
+			REG scratchReg = GetScratchReg(memOp);
+
+			INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(GetMemAddress),
+				IARG_INST_PTR,
+				IARG_MEMORYOP_EA, memOp,
+				IARG_RETURN_REGS, scratchReg,
+				IARG_END);
+
+			INS_RewriteMemoryOperand(ins, memOp, scratchReg);
+		}
+	}
+}
+
+// TODO: Corrigir versao estruturada do CodeCacheWrapper
+// ERRO: E: Unexpected memory deallocation request of aligned memory 01800400
+// Versao estruturada
+//VOID Instruction(INS ins, VOID *v)
+//{
+//	WrapperCodeCache wcc = WrapperCodeCache(addrintVector, codeCacheBlockSize);
+//	wcc.Instruction(ins, v);
+//}
 
 /**
  Main procedure of pintool. Not very interested to comment if you are related to Pintools development
@@ -175,10 +255,12 @@ int main(int argc, char *argv[])
     PIN_InitSymbols();
     PIN_Init(argc,argv);
 
-    CODECACHE_AddTraceInsertedFunction(WatchTraces, 0);
-
 	// Register Image to be called to instrument functions.
     IMG_AddInstrumentFunction(Image, 0);
+
+	CODECACHE_AddTraceInsertedFunction(WatchTraces, 0);
+
+	INS_AddInstrumentFunction(Instruction , 0);
 
 	printMessage("\t-> PIN_StartProgram();\n");
 
