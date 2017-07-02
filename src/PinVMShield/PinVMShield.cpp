@@ -44,6 +44,7 @@
 #include "WrapperGetCursorPos.h"
 #include "WrapperCallNamedPipe.h"
 #include "WrapperTLSGetValue.h"
+#include "WrapperPageQueryFeedbeaf.h"
 
 #include "WrapperCodeCache.h"
 
@@ -69,6 +70,7 @@ VOID Image(IMG img, VOID *v)
 
 		// Fill vector properly...
 		vWinAPIs.push_back(new WrapperTLSGetValue()); // API TLSGetValue
+		vWinAPIs.push_back(new WrapperPageQueryFeedbeaf()); //API PageQueryFeedbeaf
 
 		vWinAPIs.push_back(new WrapperGetUserName()); // API GetUserNameA/W
 		vWinAPIs.push_back(new WrapperGetUserNameEx()); // API GetUserNameExA/W
@@ -260,7 +262,7 @@ int main(int argc, char *argv[])
 
 	CODECACHE_AddTraceInsertedFunction(WatchTraces, 0);
 
-	INS_AddInstrumentFunction(Instruction , 0);
+	//INS_AddInstrumentFunction(Instruction , 0);
 
 	printMessage("\t-> PIN_StartProgram();\n");
 
