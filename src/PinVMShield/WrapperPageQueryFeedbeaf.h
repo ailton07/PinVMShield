@@ -82,7 +82,7 @@ private:
 					}
 				}
 
-			} while(isCodeCache || retVal != 0);
+			} while(isCodeCache && retVal != 0);
 
 			return retVal;
 	}
