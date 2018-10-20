@@ -1,8 +1,8 @@
 /*
-* @filename 		WrapperGetUserName.h
-* @version			1.0, December 2013
-* @author			R.J. Rodríguez (rjrodriguez@fi.upm.es), I. Rodríguez-Gastón (irodriguez@virtualminds.es)
-* @description		Concrete class to wrap GetUserNameA/GetUserNameW Windows APIs
+* @filename 		WrapperPageQueryFeedbeaf.h
+* @version			1.1, Oct 2018
+* @author			A. da Silva
+* @description		
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,13 @@
 class WrapperPageQueryFeedbeaf: public PinWrapperWinAPI {
 private:
 	/**
-	Wrapper of TlsGetValue Windows APIs. Spoofs the return if needed
+	Wrapper of VirtualQuery Windows APIs. Spoofs the return if needed
 	before returning to the caller
-	@param orig a pointer to the address of the original function (GetModuleHandleA/GetModuleHandleW)
-	@param dwTlsIndex The TLS index that was allocated by the TlsAlloc function.
-	@param ctx a pointer to a CONTEXT Pin structure that stores the architectural state of the processor
-	@return a bool indicating whether the execution was successful
-	For more information, check https://msdn.microsoft.com/pt-br/library/windows/desktop/ms686812(v=vs.85).aspx
+	@param lpAddress [in, optional] a pointer to the base address of the region of pages to be queried.
+	@param lpBuffer [out] a pointer to a MEMORY_BASIC_INFORMATION structure in which information about the specified page range is returned.
+	@param dwLength [in] the size of the buffer pointed to by the lpBuffer parameter, in bytes.
+	@return the return value is the actual number of bytes returned in the information buffer.
+	For more information, check https://msdn.microsoft.com/en-us/library/windows/desktop/aa366902(v=vs.85).aspx
 	*/
 	static WINDOWS::SIZE_T myPageQuery(AFUNPTR orig, 
 		WINDOWS::LPCVOID lpAddress,
@@ -42,49 +42,59 @@ private:
 			bool isCodeCache = false;
 			unsigned long* baseAddress = (unsigned long *) lpAddress;
 
-			do {
-				PIN_CallApplicationFunction(ctx, PIN_ThreadId(),
-					CALLINGSTD_STDCALL, orig, NULL,
-					PIN_PARG(WINDOWS::SIZE_T), &retVal,
-					PIN_PARG(WINDOWS::LPCVOID), baseAddress,
-					PIN_PARG(WINDOWS::PMEMORY_BASIC_INFORMATION), lpBuffer,
-					PIN_PARG(WINDOWS::SIZE_T), dwLength,
-					PIN_PARG_END()
-					);
+			PIN_CallApplicationFunction(ctx, PIN_ThreadId(),
+				CALLINGSTD_STDCALL, orig, NULL,
+				PIN_PARG(WINDOWS::SIZE_T), &retVal,
+				PIN_PARG(WINDOWS::LPCVOID), baseAddress,
+				PIN_PARG(WINDOWS::PMEMORY_BASIC_INFORMATION), lpBuffer,
+				PIN_PARG(WINDOWS::SIZE_T), dwLength,
+				PIN_PARG_END()
+				);
 
-				bool detectionVMs = (retVal !=0 ? true: false);
-				isCodeCache = false;
+			bool detectionVMs = (retVal !=0 ? true: false);
+			if(detectionVMs) {
+#ifdef debug
+				if ((lpBuffer->AllocationProtect == 0x40) && (unsigned long)(*lpBuffer).BaseAddress < 0x70000000) {
+					char textToPrint[4096];	
+					//sprintf(textToPrint, "[Orginal] 0x%x\n", reinterpret_cast<unsigned long*>(baseAddress));
+					sprintf(textToPrint, "[ANTES] 0x%x\n", (*lpBuffer).BaseAddress);
+					printMessage(TEXT(textToPrint));
 
-				if(detectionVMs) {
-					if (lpBuffer->AllocationProtect == 0x40) {
-						//Só faz o 
-						if (*baseAddress == 0xfeedbeaf) {
-							isCodeCache = true;
-						
-							//Calculate the next region 
-							WINDOWS::DWORD newAddress = WINDOWS::DWORD(baseAddress) + lpBuffer->RegionSize;
+					sprintf(textToPrint, "[Orginal] 0x%x\n", getPageContent(reinterpret_cast<unsigned long*>((*lpBuffer).BaseAddress)));
+					printMessage(TEXT(textToPrint));
 
-							//printf("base: %u region: %u new: %u\n", baseAddress, lpBuffer->RegionSize, newAddress);
+					sprintf(textToPrint, "[Orginal] e igual a 0xfeedbeaf ? %d\n", getPageContent(reinterpret_cast<unsigned long*>((*lpBuffer).BaseAddress)) == 0xfeedbeaf ? true: false);
+					printMessage(TEXT(textToPrint));
 
-							if (newAddress <= (WINDOWS::DWORD) baseAddress) {
-								return retVal;
-							}
-							else {
-								baseAddress = (unsigned long *) newAddress;
-							}
-						}
-						else {
-							return retVal;
-						}
-					}
-					else {
-						return retVal;
+					sprintf(textToPrint, "[DEPOIS]\n");
+					printMessage(TEXT(textToPrint));
+					//return retVal;
+					//return 0;
+				}
+#endif
+				// 0x40 = PAGE_EXECUTE_READWRITE // https://docs.microsoft.com/en-us/windows/desktop/memory/memory-protection-constants
+				// baseAddress >  0x70000000 is OS reserved
+				if ((lpBuffer->AllocationProtect == 0x40) && ((unsigned long) baseAddress <  0x70000000)) {
+					if (*baseAddress == 0xfeedbeaf) {
+						return 0;
 					}
 				}
-
-			} while(isCodeCache && retVal != 0);
-
+			}
 			return retVal;
+	}
+
+	static unsigned long getPageContent(unsigned long *p) {
+		__try {
+			//printf("%x\n", *p);
+			return *p;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER) {
+			char textToPrint[4096];	
+			WINDOWS::DWORD dw = WINDOWS::GetLastError(); 
+			sprintf(textToPrint, "[GetLastError] %d\n", dw);
+			printMessage(TEXT(textToPrint));
+			return NULL;
+		}
 	}
 
 protected:

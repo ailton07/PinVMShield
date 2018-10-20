@@ -36,7 +36,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\pin</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
@@ -46,7 +46,7 @@
       <AdditionalOptions>/MT /EHs- /EHa- /wd4530 /DTARGET_WINDOWS /DBIGARRAY_MULTIPLIER=1
 /DUSING_XED /D_CRT_SECURE_NO_DEPRECATE /D_SECURE_SCL=0 /nologo /DTARGET_IA32 /DHOST_IA32 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Pessoal\pin\extras\xed-ia32\include;C:\Pessoal\pin\extras\components\include;C:\Pessoal\pin\source\include\pin\gen;C:\Pessoal\pin\source\include\pin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\pin\extras\xed-ia32\include;C:\pin\extras\components\include;C:\pin\source\include\pin\gen;C:\pin\source\include\pin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>TARGET_IA32;HOST_IA32;TARGET_WINDOWS;USING_XED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -56,7 +56,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/DLL /EXPORT:main /NODEFAULTLIB /NOLOGO /ENTRY:Ptrace_DllMainCRTStartup%4012 ntdll-32.lib libxed.lib pin.lib pinvm.lib libcmt.lib libcpmt.lib /DEBUG %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>C:\Pessoal\pin\ia32\lib-ext;C:\Pessoal\pin\extras\xed-ia32\lib;C:\Pessoal\pin\extras\components\lib\ia32;C:\Pessoal\pin\ia32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\pin\ia32\lib-ext;C:\pin\extras\xed-ia32\lib;C:\pin\extras\components\lib\ia32;C:\pin\ia32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
