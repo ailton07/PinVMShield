@@ -20,6 +20,9 @@
 
 #include "PinWrapperWinAPI.h"
 
+// This value may have to be adjusted.
+#define PIN_SLOTS 6
+
 int count = 0;
 
 class WrapperTLSGetValue: public PinWrapperWinAPI
@@ -64,19 +67,18 @@ class WrapperTLSGetValue: public PinWrapperWinAPI
 				// Os valores previamente existentes sao deslocados em 5
 				// O que estava no slot 1, vai para o slot 6
 				// Logo, so precisamos spoofar os 5 primeiros slots
-				 if (dwTlsIndex < 6) 
+				 if (dwTlsIndex < PIN_SLOTS) 
 				 {
 					 printMessage("\t-> [TLS_GV] Asked for TLS values, spoofing return value\n");
 					 sprintf(textToPrint, "[Orginal] %d\n", reinterpret_cast<int>(retVal));
 					 printMessage(TEXT(textToPrint));
 					
 					 retVal = (WINDOWS::LPVOID) 0;
-					
+				
 					sprintf(textToPrint, "[Modificada] %d\n\n", reinterpret_cast<int>(retVal));
 					printMessage(TEXT(textToPrint));
 				}
 			}
-
 			return retVal;
 		}
 	protected:
