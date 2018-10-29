@@ -143,16 +143,13 @@ VOID WatchTraces(TRACE trace, VOID *v)
 	ADDRINT orig_pc = TRACE_Address(trace);
 	ADDRINT codeCacheAddress = TRACE_CodeCacheAddress(trace);
 
-	for(int i = 0 ; i < addrintVector.size(); i++)
-    {
-		if ((addrintVector[i] == codeCacheAddress) ||
-			(codeCacheAddress > addrintVector[i]) && 
-			(codeCacheAddress < addrintVector[i] + codeCacheBlockSize))
-			return;
-	 }
-
+	// Check permissions of memory page
+	// Detect PinDetectionByDEPNeglect technique
+	WINDOWS::MEMORY_BASIC_INFORMATION mbi;
+	memset(&mbi, 0, sizeof(mbi));
+	WINDOWS::SIZE_T numBytes = WINDOWS::VirtualQuery((WINDOWS::LPVOID)orig_pc, &mbi, sizeof(mbi));
+	if (numBytes!= 0 && mbi.Protect != 0x20)
 	{
-
 		sprintf(textToPrint, "\n[TRACE_Address] 0x%x ", orig_pc);
 		printMessage(TEXT(textToPrint));
 
@@ -162,11 +159,37 @@ VOID WatchTraces(TRACE trace, VOID *v)
 		sprintf(textToPrint, "\t[TRACE_Size] 0x%x ", TRACE_Size(trace));
 		printMessage(TEXT(textToPrint));
 
-		sprintf(textToPrint, "\t[TRACE_CodeCacheSize] 0x%x \n", TRACE_CodeCacheSize(trace));
+		sprintf(textToPrint, "\t[TRACE_CodeCacheSize] 0x%x", TRACE_CodeCacheSize(trace));
 		printMessage(TEXT(textToPrint));
 
-		addrintVector.push_back(codeCacheAddress);
+		sprintf(textToPrint, "\t[TRACE_Address] 0x%x [Permissions] 0x%x\n", orig_pc, mbi.Protect);
+		printMessage(TEXT(textToPrint));
 	}
+
+
+	for(int i = 0 ; i < addrintVector.size(); i++)
+	{
+		if ((addrintVector[i] == codeCacheAddress) ||
+			(codeCacheAddress > addrintVector[i]) && 
+			(codeCacheAddress < addrintVector[i] + codeCacheBlockSize))
+		{
+			return;
+		}
+	}
+
+	sprintf(textToPrint, "\n[TRACE_Address] 0x%x ", orig_pc);
+	printMessage(TEXT(textToPrint));
+
+	sprintf(textToPrint, "\t[TRACE_CodeCacheAddress] 0x%x ", codeCacheAddress);
+	printMessage(TEXT(textToPrint));
+
+	sprintf(textToPrint, "\t[TRACE_Size] 0x%x ", TRACE_Size(trace));
+	printMessage(TEXT(textToPrint));
+
+	sprintf(textToPrint, "\t[TRACE_CodeCacheSize] 0x%x \n", TRACE_CodeCacheSize(trace));
+	printMessage(TEXT(textToPrint));
+
+	addrintVector.push_back(codeCacheAddress);
 }
 
 // Versao nao estruturada
